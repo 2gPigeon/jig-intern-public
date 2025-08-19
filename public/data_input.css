@@ -23,6 +23,13 @@ input {
   color: #666;
 }
 
+/* Leaflet map container styling */
+#leaflet-map {
+  border: 2px solid #4CAF50;
+  border-radius: 8px;
+  margin: 10px 0;
+}
+
 /* Simple map container styling */
 #simple-map {
   border: 2px solid #4CAF50;
