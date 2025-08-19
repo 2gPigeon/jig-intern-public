@@ -1,6 +1,9 @@
 body {
             margin: 0;
             font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
         header {
             background-color: #4CAF50;
@@ -12,7 +15,7 @@ body {
         .container {
             display: flex;
             flex-direction: row;
-            height: calc(100vh - 50px); /* ヘッダーを除いた高さ */
+            flex: 1;
         }
         .sidebar {
             width: 20%;
@@ -25,12 +28,96 @@ body {
             padding: 10px;
             box-sizing: border-box;
         }
+        
+        /* Map container styles */
+        #map {
+            height: 100%;
+            width: 100%;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .map-container {
+            height: 100%;
+            width: 100%;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .map-title {
+            background-color: rgba(76, 175, 80, 0.9);
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .japan-map {
+            flex: 1;
+            position: relative;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><path d="M150,50 L250,50 L270,80 L280,120 L270,160 L250,200 L200,220 L150,210 L120,180 L110,140 L120,100 Z" fill="%23a8d5a8" stroke="%234CAF50" stroke-width="2"/></svg>') no-repeat center center;
+            background-size: contain;
+            transition: transform 0.3s ease;
+        }
+        
+        .prefecture {
+            position: absolute;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        
+        .prefecture:hover {
+            transform: scale(1.2);
+        }
+        
+        .marker {
+            font-size: 20px;
+            text-align: center;
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
+        }
+        
+        .place-name {
+            background-color: white;
+            border: 1px solid #4CAF50;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 12px;
+            text-align: center;
+            margin-top: 2px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .map-controls {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            text-align: center;
+            border-top: 1px solid #ddd;
+        }
+        
+        .map-controls button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            margin: 0 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .map-controls button:hover {
+            background-color: #45a049;
+        }
         footer {
             background-color: #4CAF50;
             color: white;
             text-align: center;
             padding: 10px;
-            position: absolute;
-            bottom: 0;
+            position: relative;
             width: 100%;
+            margin-top: auto;
         }

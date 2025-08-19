@@ -15,11 +15,74 @@
             ここで入力できたらよさそーう
         </div>
         <div class="main">
-            ここに地図を表示したーい
+            <div id="map">
+                <div class="map-container">
+                    <div class="map-title">日本地図</div>
+                    <div class="japan-map">
+                        <div class="prefecture" id="tokyo" style="top: 50%; left: 60%;">
+                            <div class="marker">📍</div>
+                            <div class="place-name">東京</div>
+                        </div>
+                        <div class="prefecture" id="osaka" style="top: 65%; left: 45%;">
+                            <div class="marker">📍</div>
+                            <div class="place-name">大阪</div>
+                        </div>
+                        <div class="prefecture" id="nagoya" style="top: 55%; left: 50%;">
+                            <div class="marker">📍</div>
+                            <div class="place-name">名古屋</div>
+                        </div>
+                        <div class="prefecture" id="fukuoka" style="top: 80%; left: 25%;">
+                            <div class="marker">📍</div>
+                            <div class="place-name">福岡</div>
+                        </div>
+                        <div class="prefecture" id="sapporo" style="top: 15%; left: 65%;">
+                            <div class="marker">📍</div>
+                            <div class="place-name">札幌</div>
+                        </div>
+                    </div>
+                    <div class="map-controls">
+                        <button onclick="zoomIn()">ズームイン</button>
+                        <button onclick="zoomOut()">ズームアウト</button>
+                        <button onclick="resetView()">リセット</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     <footer>
         フッターの内容
     </footer>
+    
+    <script>
+        let currentZoom = 1;
+        
+        function zoomIn() {
+            currentZoom = Math.min(currentZoom * 1.2, 3);
+            updateMapScale();
+        }
+        
+        function zoomOut() {
+            currentZoom = Math.max(currentZoom / 1.2, 0.5);
+            updateMapScale();
+        }
+        
+        function resetView() {
+            currentZoom = 1;
+            updateMapScale();
+        }
+        
+        function updateMapScale() {
+            const japanMap = document.querySelector('.japan-map');
+            japanMap.style.transform = `scale(${currentZoom})`;
+        }
+        
+        // Add click handlers for markers
+        document.querySelectorAll('.prefecture').forEach(prefecture => {
+            prefecture.addEventListener('click', function() {
+                const placeName = this.querySelector('.place-name').textContent;
+                alert(`選択された場所: ${placeName}`);
+            });
+        });
+    </script>
 </body>
 </html>
