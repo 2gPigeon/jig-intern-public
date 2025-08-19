@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>お金を落としたのはどこ？</title>
     <link rel="stylesheet" href="data_show.css">
+    <!-- LeafletのCSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 500px; /* 地図の高さを指定 */
+            width: 100%; /* 地図の幅を指定 */
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -15,11 +23,27 @@
             ここで入力できたらよさそーう
         </div>
         <div class="main">
-            ここに地図を表示したーい
+            <div id="map"></div>
         </div>
     </div>
     <footer>
         フッターの内容
     </footer>
+    
+    <!-- LeafletのJS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // 地図の初期設定
+        const map = L.map('map').setView([34.6937, 135.5023], 13); // 大阪を中心に設定
+
+        // OpenStreetMapのタイルを追加
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // マーカーを大阪に追加
+        const marker = L.marker([34.6937, 135.5023]).addTo(map);
+        marker.bindPopup('大阪').openPopup();
+    </script>
 </body>
 </html>
