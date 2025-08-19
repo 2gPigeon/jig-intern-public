@@ -87,7 +87,7 @@
                     map.on('click', function(e) {
                         const lat = e.latlng.lat;
                         const lng = e.latlng.lng;
-                        
+
                         // マーカーの位置を更新
                         marker.setLatLng([lat, lng]);
                         updateCoordinates(lat, lng);
@@ -95,8 +95,14 @@
 
                     // Leaflet地図を表示
                     document.getElementById('leaflet-map').style.display = 'block';
+
+                    // 地図のサイズを再計算
+                    setTimeout(() => {
+                        map.invalidateSize();
+                    }, 0);
+
                     useLeaflet = true;
-                    
+
                     // 初期値を設定
                     updateCoordinates(34.6937, 135.5023);
                     return true;
@@ -232,5 +238,5 @@
             }
         });
     </script>
-</body>
+<div id="leaflet-map" style="height: 400px; width: 100%; display: none;"></div></body>
 </html>
