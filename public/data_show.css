@@ -1,0 +1,36 @@
+body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-size: 24px;
+        }
+        .container {
+            display: flex;
+            flex-direction: row;
+            height: calc(100vh - 50px); /* ヘッダーを除いた高さ */
+        }
+        .sidebar {
+            width: 20%;
+            background-color: #f4f4f4;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        .main {
+            flex: 1;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        footer {
+            background-color: #4CAF50;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+        }
