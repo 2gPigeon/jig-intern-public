@@ -28,7 +28,16 @@ body {
             padding: 10px;
             box-sizing: border-box;
         }
-        
+        button {
+            width: 100%;
+            padding: 10px;
+            margin: auto;
+            border: none;
+            border-radius: 4px;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
         /* Map container styles */
         #map {
             height: 100%;
