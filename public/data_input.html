@@ -5,18 +5,239 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>購入データの入力</title>
     <link rel="stylesheet" href="data_input.css">
+    <!-- LeafletのCSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body>
     <h1>購入データの入力をしよう</h1>
     <form action="/submit" method="post">
         <label for="data">購入金額を入力してください:</label>
         <input type="number" id="data" name="data" max="1000000" min="1" required>円<br>
-    <!-- 購入した場所の入力(一旦緯度経度をしたい)-->
-    <label for="latitude">緯度を入力してください:</label>
-    <input type="number" id="latitude" name="latitude" step="0.000001" max="90" min="-90" required><br>
-    <label for="longitude">経度を入力してください:</label>
-    <input type="number" id="longitude" name="longitude" step="0.000001" max="180" min="-180" required>
-    <button type="submit">送信</button>
+        
+        <!-- 購入した場所の入力 -->
+        <div class="location-section">
+            <h3>購入した場所を選択してください</h3>
+            <p>地図上でクリックするか、マーカーをドラッグして位置を指定してください</p>
+            
+            <!-- 地図コンテナ (Leafletが使用可能な場合) -->
+            <div id="leaflet-map" style="height: 400px; width: 100%; display: none;"></div>
+            
+            <!-- 簡易地図コンテナ (フォールバック) -->
+            <div id="simple-map" style="display: none;">
+                <div class="map-info">
+                    <p>日本地図 (クリックして位置を選択)</p>
+                </div>
+                <svg id="map-svg" width="400" height="300" viewBox="0 0 400 300">
+                    <!-- 日本の簡易形状 -->
+                    <path d="M100,50 L200,45 L250,60 L280,80 L320,90 L340,120 L330,150 L310,180 L280,200 L250,220 L200,230 L150,225 L110,210 L80,180 L70,150 L75,120 L85,90 Z" 
+                          fill="#e8f5e8" stroke="#4CAF50" stroke-width="2" cursor="pointer" id="japan-path"/>
+                    <!-- マーカー -->
+                    <circle id="marker" cx="200" cy="150" r="8" fill="#ff4444" stroke="#ffffff" stroke-width="2" style="display:none"/>
+                </svg>
+                
+                <div class="map-controls">
+                    <button type="button" onclick="resetMarker()">位置をリセット</button>
+                    <button type="button" onclick="useCurrentLocation()">現在地を使用</button>
+                </div>
+            </div>
+            
+            <!-- 緯度経度の入力フィールド -->
+            <div class="coordinates-input">
+                <label for="latitude">緯度:</label>
+                <input type="number" id="latitude" name="latitude" step="0.000001" max="90" min="-90" required>
+                
+                <label for="longitude">経度:</label>
+                <input type="number" id="longitude" name="longitude" step="0.000001" max="180" min="-180" required>
+            </div>
+        </div>
+        
+        <button type="submit">送信</button>
     </form>
+
+    <!-- LeafletのJS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        let map, marker;
+        let useLeaflet = false;
+        
+        // Leafletの初期化を試行
+        function initializeLeafletMap() {
+            try {
+                if (typeof L !== 'undefined') {
+                    // Leaflet地図の初期設定（大阪を中心に設定）
+                    map = L.map('leaflet-map').setView([34.6937, 135.5023], 13);
+
+                    // OpenStreetMapのタイルを追加
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    }).addTo(map);
+
+                    // ドラッグ可能なマーカーを初期位置に追加
+                    marker = L.marker([34.6937, 135.5023], {
+                        draggable: true
+                    }).addTo(map);
+
+                    // マーカーがドラッグされたときの処理
+                    marker.on('dragend', function(e) {
+                        const position = marker.getLatLng();
+                        updateCoordinates(position.lat, position.lng);
+                    });
+
+                    // 地図をクリックしたときの処理
+                    map.on('click', function(e) {
+                        const lat = e.latlng.lat;
+                        const lng = e.latlng.lng;
+
+                        // マーカーの位置を更新
+                        marker.setLatLng([lat, lng]);
+                        updateCoordinates(lat, lng);
+                    });
+
+                    // Leaflet地図を表示
+                    document.getElementById('leaflet-map').style.display = 'block';
+
+                    // 地図のサイズを再計算
+                    setTimeout(() => {
+                        map.invalidateSize();
+                    }, 0);
+
+                    useLeaflet = true;
+
+                    // 初期値を設定
+                    updateCoordinates(34.6937, 135.5023);
+                    return true;
+                }
+            } catch (error) {
+                console.log('Leafletの初期化に失敗:', error);
+            }
+            return false;
+        }
+        
+        // 簡易地図の初期化
+        function initializeSimpleMap() {
+            // 簡易地図の座標変換（日本の範囲）
+            const MAP_BOUNDS = {
+                minLat: 24,
+                maxLat: 46,
+                minLng: 123,
+                maxLng: 146
+            };
+            
+            const SVG_SIZE = {
+                width: 400,
+                height: 300
+            };
+            
+            // SVG座標から緯度経度に変換
+            function svgToLatLng(x, y) {
+                const lat = MAP_BOUNDS.maxLat - ((y / SVG_SIZE.height) * (MAP_BOUNDS.maxLat - MAP_BOUNDS.minLat));
+                const lng = MAP_BOUNDS.minLng + ((x / SVG_SIZE.width) * (MAP_BOUNDS.maxLng - MAP_BOUNDS.minLng));
+                return { lat, lng };
+            }
+            
+            // 緯度経度からSVG座標に変換
+            function latLngToSvg(lat, lng) {
+                const x = ((lng - MAP_BOUNDS.minLng) / (MAP_BOUNDS.maxLng - MAP_BOUNDS.minLng)) * SVG_SIZE.width;
+                const y = ((MAP_BOUNDS.maxLat - lat) / (MAP_BOUNDS.maxLat - MAP_BOUNDS.minLat)) * SVG_SIZE.height;
+                return { x, y };
+            }
+            
+            // マーカーの位置を更新
+            window.updateSimpleMarker = function(lat, lng) {
+                const svgPos = latLngToSvg(lat, lng);
+                const marker = document.getElementById('marker');
+                marker.setAttribute('cx', svgPos.x);
+                marker.setAttribute('cy', svgPos.y);
+                marker.style.display = 'block';
+            }
+            
+            // 地図クリックイベント
+            document.getElementById('map-svg').addEventListener('click', function(e) {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const x = (e.clientX - rect.left) * (SVG_SIZE.width / rect.width);
+                const y = (e.clientY - rect.top) * (SVG_SIZE.height / rect.height);
+                
+                const latLng = svgToLatLng(x, y);
+                updateCoordinates(latLng.lat, latLng.lng);
+            });
+            
+            // 簡易地図を表示
+            document.getElementById('simple-map').style.display = 'block';
+            
+            // 初期値設定（大阪）
+            updateCoordinates(34.6937, 135.5023);
+        }
+        
+        // 座標を更新する関数（共通）
+        function updateCoordinates(lat, lng) {
+            document.getElementById('latitude').value = lat.toFixed(6);
+            document.getElementById('longitude').value = lng.toFixed(6);
+            
+            if (useLeaflet && marker) {
+                marker.setLatLng([lat, lng]);
+            } else if (window.updateSimpleMarker) {
+                window.updateSimpleMarker(lat, lng);
+            }
+        }
+        
+        // 位置リセット
+        function resetMarker() {
+            if (useLeaflet) {
+                document.getElementById('latitude').value = '';
+                document.getElementById('longitude').value = '';
+            } else {
+                document.getElementById('marker').style.display = 'none';
+                document.getElementById('latitude').value = '';
+                document.getElementById('longitude').value = '';
+            }
+        }
+        
+        // 現在地取得
+        function useCurrentLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    updateCoordinates(lat, lng);
+                    
+                    if (useLeaflet && map) {
+                        map.setView([lat, lng], 13);
+                    }
+                }, function() {
+                    alert('現在地を取得できませんでした。');
+                });
+            } else {
+                alert('お使いのブラウザは位置情報サービスをサポートしていません。');
+            }
+        }
+        
+        // 入力フィールドの変更でマーカーを更新
+        document.getElementById('latitude').addEventListener('input', updateMarkerFromInputs);
+        document.getElementById('longitude').addEventListener('input', updateMarkerFromInputs);
+        
+        function updateMarkerFromInputs() {
+            const lat = parseFloat(document.getElementById('latitude').value);
+            const lng = parseFloat(document.getElementById('longitude').value);
+            
+            if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+                if (useLeaflet && marker) {
+                    marker.setLatLng([lat, lng]);
+                    map.setView([lat, lng]);
+                } else if (window.updateSimpleMarker) {
+                    window.updateSimpleMarker(lat, lng);
+                }
+            }
+        }
+        
+        // ページ読み込み時の初期化
+        window.addEventListener('load', function() {
+            // まずLeafletの初期化を試行
+            if (!initializeLeafletMap()) {
+                // Leafletが使用できない場合は簡易地図を使用
+                initializeSimpleMap();
+            }
+        });
+    </script>
+    <div id="leaflet-map" style="height: 400px; width: 100%; display: none;"></div>
 </body>
 </html>
