@@ -7,8 +7,11 @@ Deno.serve(async (req) => {
   if (req.method === "POST" && pathname === "/submit-data") {
     const { data, latitude, longitude } = await req.json();
     console.log("Received data:", { data, latitude, longitude });
+    const kv = await Deno.openKv();
+    const myUUID = crypto.randomUUID();
+    const key = ["pin",myUUID];
+    await kv.set(key,{"data":data,"latitude":latitude,"longitude":longitude});
     return new Response();
-    // TODO: ここにdeno.kvにデータを保存する処理を追加
   }
   // TODO: ここにdeno.kvからデータを取得する処理を追加
   return serveDir(req, {
