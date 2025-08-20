@@ -8,8 +8,9 @@ Deno.serve(async (req) => {
     const { data, latitude, longitude } = await req.json();
     console.log("Received data:", { data, latitude, longitude });
     return new Response();
+    // TODO: ここにdeno.kvにデータを保存する処理を追加
   }
-
+  // TODO: ここにdeno.kvからデータを取得する処理を追加
   return serveDir(req, {
     fsRoot: "public",
     urlRoot: "",
