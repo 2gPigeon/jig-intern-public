@@ -51,7 +51,7 @@
             </div>
         </div>
         
-        <button type="submit">送信</button>
+        <button type="submit" id="submit-button">送信</button>
     </form>
 
     <!-- LeafletのJS -->
@@ -236,6 +236,42 @@
                 // Leafletが使用できない場合は簡易地図を使用
                 initializeSimpleMap();
             }
+        });
+        // 送信ボタンの活性・非活性
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const dataInput = document.getElementById('data');
+            const submitButton = document.getElementById('submit-button');
+
+            function toggleSubmit() {
+                submitButton.disabled = !dataInput.value;
+            }
+
+            // 入力時にボタンの活性/非活性を切り替え
+            dataInput.addEventListener('input', toggleSubmit);
+
+            // 初期状態もチェック
+            toggleSubmit();
+        });
+        // 送信ボタンクリック時の処理
+        document.getElementById('submit-button').addEventListener('click', function() {
+            const data = document.getElementById('data').value;
+            const latitude = document.getElementById('latitude').value;
+            const longitude = document.getElementById('longitude').value;
+
+            fetch('/submit-data', {
+                method: 'POST',
+                body: JSON.stringify({ data, latitude, longitude }),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => {
+                if (response.ok) {
+                    alert('データが送信されました！');
+                } else {
+                    alert('データの送信に失敗しました。');
+                }
+            });
         });
     </script>
     <div id="leaflet-map" style="height: 400px; width: 100%; display: none;"></div>
