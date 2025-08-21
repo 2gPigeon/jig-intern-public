@@ -37,8 +37,22 @@
     <script src="leaflet.sprite.js"></script>
     <script>
         const markers = [];
+        const map = L.map('map');
         // 地図の初期設定
-        const map = L.map('map').setView([34.6937, 135.5023], 13); // 大阪を中心に設定
+        function useCurrentLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    map.setView([lat, lng], 13); // 現在地を中心に地図を表示
+                }, function() {
+                    alert('現在地を取得できませんでした。');
+                });
+            } else {
+                alert('お使いのブラウザは位置情報サービスをサポートしていません。');
+            }
+        }
+        useCurrentLocation();
 
         // OpenStreetMapのタイルを追加
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
