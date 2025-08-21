@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         #map {
-            height: 500px; /* 地図の高さを指定 */
+            height: 650px; /* 地図の高さを指定 */
             width: 100%; /* 地図の幅を指定 */
         }
     </style>
@@ -37,7 +37,7 @@
     <script src="leaflet.sprite.js"></script>
     <script>
         const markers = [];
-        const map = L.map('map');
+        const map = L.map('map').setView([34.6937, 135.5023], 13);
         // 地図の初期設定
         function useCurrentLocation() {
             if (navigator.geolocation) {
