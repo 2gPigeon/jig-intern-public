@@ -77,7 +77,7 @@
                         colorSetting = 'blue';
                     }
                     const marker = L.marker([item.latitude, item.longitude],{icon: L.spriteIcon(colorSetting)}).addTo(map);
-                    marker.bindPopup(`支出: ${item.data}円`).openPopup();
+                    marker.bindPopup(`支出: ${item.data}円`);
                     markers.push(marker);
                 });
             })
