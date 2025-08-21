@@ -52,6 +52,7 @@
                 alert('お使いのブラウザは位置情報サービスをサポートしていません。');
             }
         }
+        useCurrentLocation();
 
         // OpenStreetMapのタイルを追加
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -108,10 +109,9 @@
                             colorSetting = 'blue';
                         }
                         const marker = L.marker([item.latitude, item.longitude],{icon: L.spriteIcon(colorSetting)}).addTo(map);
-                        marker.bindPopup(`支出: ${item.data}円`).openPopup();
+                        marker.bindPopup(`支出: ${item.data}円`);
                         markers.push(marker);
                     });
-                    useCurrentLocation();
                 })
                 .catch(error => {
                     console.error('データの取得に失敗しました:', error);
