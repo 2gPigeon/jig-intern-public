@@ -10,7 +10,7 @@
 </head>
 <body>
     <h1>購入データの入力をしよう</h1>
-    <form action="index.html" method="post">
+    <form method="post">
         <label for="data">購入金額を入力してください:</label>
         <input type="number" id="data" name="data" max="1000000" min="1" required>円<br>
         
@@ -258,7 +258,6 @@
             const data = document.getElementById('data').value;
             const latitude = document.getElementById('latitude').value;
             const longitude = document.getElementById('longitude').value;
-
             fetch('/submit-data', {
                 method: 'POST',
                 body: JSON.stringify({ data, latitude, longitude }),
@@ -267,7 +266,7 @@
                 }
             }).then(response => {
                 if (response.ok) {
-                    alert('データが送信されました！');
+                    window.location.href = 'index.html';
                 } else {
                     alert('データの送信に失敗しました。');
                 }

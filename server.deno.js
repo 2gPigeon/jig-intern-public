@@ -13,7 +13,17 @@ Deno.serve(async (req) => {
     await kv.set(key,{"data":data,"latitude":latitude,"longitude":longitude});
     return new Response();
   }
-  // TODO: ここにdeno.kvからデータを取得する処理を追加
+
+  if (req.method === "GET" && pathname === "/get-data") {
+    const kv = await Deno.openKv();
+    const data = [];
+    for await (const entry of kv.list({ prefix: ["pin"] })) {
+      data.push(entry.value);
+    }
+    return new Response(JSON.stringify(data), {
+      headers: { "Content-Type": "application/json" },
+    });
+  }
   return serveDir(req, {
     fsRoot: "public",
     urlRoot: "",
