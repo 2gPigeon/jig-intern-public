@@ -44,6 +44,25 @@
         // マーカーを大阪に追加
         const marker = L.marker([34.6937, 135.5023]).addTo(map);
         marker.bindPopup('大阪').openPopup();
+
+        // データを取得
+        fetch('/get-data',{
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(response => response.json())
+            .then(data => {
+                const points = [];
+                data.forEach(item => {
+                    // 各データポイントにマーカーを追加
+                    const marker = L.marker([item.latitude, item.longitude]).addTo(map);
+                    marker.bindPopup(`支出: ${item.data}円`).openPopup();
+                });
+            })
+            .catch(error => {
+                console.error('データの取得に失敗しました:', error);
+            });
     </script>
 </body>
 </html>
