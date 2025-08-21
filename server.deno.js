@@ -9,7 +9,15 @@ Deno.serve(async (req) => {
     console.log("Received data:", { data, latitude, longitude });
     const kv = await Deno.openKv();
     const myUUID = crypto.randomUUID();
-    const key = ["pin",myUUID];
+    const d = new Date();
+    const pad = (n) => n.toString().padStart(2, "0");
+    const Y = d.getFullYear().toString();
+    const M = pad(d.getMonth() + 1);
+    const D = pad(d.getDate());
+    const h = pad(d.getHours());
+    const m = pad(d.getMinutes());
+    const s = pad(d.getSeconds());
+    const key = [`${Y}-${M}`,D,`${h}:${m}:${s}`,myUUID];
     await kv.set(key,{"data":data,"latitude":latitude,"longitude":longitude});
     return new Response();
   }
@@ -17,7 +25,19 @@ Deno.serve(async (req) => {
   if (req.method === "GET" && pathname === "/get-data") {
     const kv = await Deno.openKv();
     const data = [];
-    for await (const entry of kv.list({ prefix: ["pin"] })) {
+    for await (const entry of kv.list({ prefix: [] })) {
+      data.push(entry.value);
+    }
+    return new Response(JSON.stringify(data), {
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  if (req.method === "GET" && pathname === "/get-search-data") {
+    const param = new URL(req.url).searchParams.get("YYYY-MM");
+    const kv = await Deno.openKv();
+    const data = [];
+    for await (const entry of kv.list({ prefix: [param] })) {
       data.push(entry.value);
     }
     return new Response(JSON.stringify(data), {

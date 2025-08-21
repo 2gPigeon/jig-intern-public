@@ -21,6 +21,8 @@
     <div class="container">
         <div class="sidebar">
             <button onclick="location.href='data_input.html'">データ入力</button>
+            <input type = "month" id = "monthInput" />
+            <button type = "button" id = "searchButton">月ごとの検索</button>
         </div>
         <div class="main">
             <div id="map"></div>
@@ -34,6 +36,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="leaflet.sprite.js"></script>
     <script>
+        const markers = [];
         // 地図の初期設定
         const map = L.map('map').setView([34.6937, 135.5023], 13); // 大阪を中心に設定
 
@@ -41,10 +44,6 @@
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
-
-        // マーカーを大阪に追加
-        const marker = L.marker([34.6937, 135.5023]).addTo(map);
-        marker.bindPopup('大阪').openPopup();
 
         // データを取得
         fetch('/get-data',{
@@ -65,11 +64,45 @@
                     }
                     const marker = L.marker([item.latitude, item.longitude],{icon: L.spriteIcon(colorSetting)}).addTo(map);
                     marker.bindPopup(`支出: ${item.data}円`).openPopup();
+                    markers.push(marker);
                 });
             })
             .catch(error => {
                 console.error('データの取得に失敗しました:', error);
             });
+        // 月ごとの検索ボタンのイベントリスナー
+        document.getElementById('searchButton').addEventListener('click', function() {
+            const month = document.getElementById('monthInput').value;
+            markers.forEach(marker => {
+                map.removeLayer(marker); // 既存のマーカーを削除
+            });
+            markers.length = 0; // マーカーの配列をクリア
+            fetch(`/get-search-data?YYYY-MM=${month}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => response.json())
+                .then(data => {
+                    // 取得したデータを地図に表示
+                    data.forEach(item => {
+                        // 各データポイントにマーカーを追加
+                        if(item.data > 10000){
+                            colorSetting = 'red';
+                        } else if(item.data > 1000){
+                            colorSetting = 'yellow';
+                        } else {
+                            colorSetting = 'blue';
+                        }
+                        const marker = L.marker([item.latitude, item.longitude],{icon: L.spriteIcon(colorSetting)}).addTo(map);
+                        marker.bindPopup(`支出: ${item.data}円`).openPopup();
+                        markers.push(marker);
+                    });
+                })
+                .catch(error => {
+                    console.error('データの取得に失敗しました:', error);
+                });
+        });
     </script>
 </body>
 </html>
