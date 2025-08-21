@@ -104,68 +104,13 @@
                     useLeaflet = true;
 
                     // 初期値を設定
-                    updateCoordinates(34.6937, 135.5023);
+                    useCurrentLocation();
                     return true;
                 }
             } catch (error) {
                 console.log('Leafletの初期化に失敗:', error);
             }
             return false;
-        }
-        
-        // 簡易地図の初期化
-        function initializeSimpleMap() {
-            // 簡易地図の座標変換（日本の範囲）
-            const MAP_BOUNDS = {
-                minLat: 24,
-                maxLat: 46,
-                minLng: 123,
-                maxLng: 146
-            };
-            
-            const SVG_SIZE = {
-                width: 400,
-                height: 300
-            };
-            
-            // SVG座標から緯度経度に変換
-            function svgToLatLng(x, y) {
-                const lat = MAP_BOUNDS.maxLat - ((y / SVG_SIZE.height) * (MAP_BOUNDS.maxLat - MAP_BOUNDS.minLat));
-                const lng = MAP_BOUNDS.minLng + ((x / SVG_SIZE.width) * (MAP_BOUNDS.maxLng - MAP_BOUNDS.minLng));
-                return { lat, lng };
-            }
-            
-            // 緯度経度からSVG座標に変換
-            function latLngToSvg(lat, lng) {
-                const x = ((lng - MAP_BOUNDS.minLng) / (MAP_BOUNDS.maxLng - MAP_BOUNDS.minLng)) * SVG_SIZE.width;
-                const y = ((MAP_BOUNDS.maxLat - lat) / (MAP_BOUNDS.maxLat - MAP_BOUNDS.minLat)) * SVG_SIZE.height;
-                return { x, y };
-            }
-            
-            // マーカーの位置を更新
-            window.updateSimpleMarker = function(lat, lng) {
-                const svgPos = latLngToSvg(lat, lng);
-                const marker = document.getElementById('marker');
-                marker.setAttribute('cx', svgPos.x);
-                marker.setAttribute('cy', svgPos.y);
-                marker.style.display = 'block';
-            }
-            
-            // 地図クリックイベント
-            document.getElementById('map-svg').addEventListener('click', function(e) {
-                const rect = e.currentTarget.getBoundingClientRect();
-                const x = (e.clientX - rect.left) * (SVG_SIZE.width / rect.width);
-                const y = (e.clientY - rect.top) * (SVG_SIZE.height / rect.height);
-                
-                const latLng = svgToLatLng(x, y);
-                updateCoordinates(latLng.lat, latLng.lng);
-            });
-            
-            // 簡易地図を表示
-            document.getElementById('simple-map').style.display = 'block';
-            
-            // 初期値設定（大阪）
-            updateCoordinates(34.6937, 135.5023);
         }
         
         // 座標を更新する関数（共通）
