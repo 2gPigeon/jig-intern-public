@@ -52,7 +52,6 @@
                 alert('お使いのブラウザは位置情報サービスをサポートしていません。');
             }
         }
-        useCurrentLocation();
 
         // OpenStreetMapのタイルを追加
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -112,6 +111,7 @@
                         marker.bindPopup(`支出: ${item.data}円`).openPopup();
                         markers.push(marker);
                     });
+                    useCurrentLocation();
                 })
                 .catch(error => {
                     console.error('データの取得に失敗しました:', error);
