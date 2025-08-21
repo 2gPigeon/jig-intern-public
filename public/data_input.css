@@ -103,8 +103,12 @@ form {
   margin: 0 auto;
   padding: 20px;
 }
-
-button[type="button"] {
+.button-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+button[id="submit-button"] {
   background-color: #4CAF50;
   color: white;
   padding: 10px 20px;
@@ -115,14 +119,28 @@ button[type="button"] {
   margin-top: 20px;
 }
 
-button[type="button"]:hover {
-  background-color: #45a049;
+button[id="submit-button"]:hover {
+  background-color: #458049;
 }
-button[type="button"]:disabled {
+button[id="submit-button"]:disabled {
   background-color: #ccc;
   color: #888;
   cursor: not-allowed;
   border: 1px solid #aaa;
+}
+button[id="back-button"] {
+  background-color: #f44336;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-top: 20px;
+}
+
+button[id="back-button"]:hover {
+  background-color: #a50606;
 }
 
 body {

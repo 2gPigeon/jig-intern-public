@@ -19,27 +19,8 @@
             <h3>購入した場所を選択してください</h3>
             <p>地図上でクリックするか、マーカーをドラッグして位置を指定してください</p>
             
-            <!-- 地図コンテナ (Leafletが使用可能な場合) -->
+            <!-- 地図を表示するコンテナ -->
             <div id="leaflet-map" style="height: 400px; width: 100%; display: none;"></div>
-            
-            <!-- 簡易地図コンテナ (フォールバック) -->
-            <div id="simple-map" style="display: none;">
-                <div class="map-info">
-                    <p>日本地図 (クリックして位置を選択)</p>
-                </div>
-                <svg id="map-svg" width="400" height="300" viewBox="0 0 400 300">
-                    <!-- 日本の簡易形状 -->
-                    <path d="M100,50 L200,45 L250,60 L280,80 L320,90 L340,120 L330,150 L310,180 L280,200 L250,220 L200,230 L150,225 L110,210 L80,180 L70,150 L75,120 L85,90 Z" 
-                          fill="#e8f5e8" stroke="#4CAF50" stroke-width="2" cursor="pointer" id="japan-path"/>
-                    <!-- マーカー -->
-                    <circle id="marker" cx="200" cy="150" r="8" fill="#ff4444" stroke="#ffffff" stroke-width="2" style="display:none"/>
-                </svg>
-                
-                <div class="map-controls">
-                    <button type="button" onclick="resetMarker()">位置をリセット</button>
-                    <button type="button" onclick="useCurrentLocation()">現在地を使用</button>
-                </div>
-            </div>
             
             <!-- 緯度経度の入力フィールド -->
             <div class="coordinates-input">
@@ -50,8 +31,10 @@
                 <input type="number" id="longitude" name="longitude" step="0.000001" max="180" min="-180" required>
             </div>
         </div>
-        
-        <button type="button" id="submit-button">送信</button>
+        <div class="button-group">
+            <button type="button" id="submit-button">送信</button>
+            <button type="button" id="back-button" onclick="history.back()">戻る</button>
+        </div>
     </form>
 
     <!-- LeafletのJS -->
