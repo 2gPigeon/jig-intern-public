@@ -32,6 +32,7 @@
     
     <!-- LeafletのJS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="leaflet.sprite.js"></script>
     <script>
         // 地図の初期設定
         const map = L.map('map').setView([34.6937, 135.5023], 13); // 大阪を中心に設定
@@ -44,6 +45,31 @@
         // マーカーを大阪に追加
         const marker = L.marker([34.6937, 135.5023]).addTo(map);
         marker.bindPopup('大阪').openPopup();
+
+        // データを取得
+        fetch('/get-data',{
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(response => response.json())
+            .then(data => {
+                data.forEach(item => {
+                    // 各データポイントにマーカーを追加
+                    if(item.data > 10000){
+                        colorSetting = 'red';
+                    } else if(item.data > 1000){
+                        colorSetting = 'yellow';
+                    } else {
+                        colorSetting = 'blue';
+                    }
+                    const marker = L.marker([item.latitude, item.longitude],{icon: L.spriteIcon(colorSetting)}).addTo(map);
+                    marker.bindPopup(`支出: ${item.data}円`).openPopup();
+                });
+            })
+            .catch(error => {
+                console.error('データの取得に失敗しました:', error);
+            });
     </script>
 </body>
 </html>
