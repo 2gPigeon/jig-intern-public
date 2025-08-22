@@ -168,3 +168,18 @@ body {
             align-items: center;
             justify-content: center;
         }
+
+        /* Responsive design for smartphones */
+        @media screen and (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+            
+            .container {
+                flex-direction: column;
+            }
+            
+            .main {
+                padding: 5px;
+            }
+        }
