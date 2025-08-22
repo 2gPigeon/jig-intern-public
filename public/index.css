@@ -28,6 +28,7 @@ body {
             background-color: #f4f4f4;
             padding: 10px;
             box-sizing: border-box;
+            text-align: center;
         }
         .main {
             flex: 1;
