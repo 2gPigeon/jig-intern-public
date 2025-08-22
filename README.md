@@ -1,4 +1,4 @@
-# jig-intern-public
+# お金を落としたのはどこ？
 
 このプロジェクトは、Denoを使用して構築されたWebアプリケーションです。  
 地図上で位置情報を指定して、その場所で購入した金額を入力します。  
@@ -35,7 +35,7 @@
 ### 実行方法
 1. リポジトリをクローンします。
    ```bash
-   git clone <リポジトリURL>
+   git clone https://github.com/2gPigeon/jig-intern-public.git
    cd jig-intern-public
    ```
 2. サーバーを起動します。
