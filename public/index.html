@@ -64,9 +64,9 @@
             .then(data => {
                 data.forEach(item => {
                     // 各データポイントにマーカーを追加
-                    if(item.data > 10000){
+                    if(item.data >= 10000){
                         colorSetting = 'red';
-                    } else if(item.data > 1000){
+                    } else if(item.data >= 1000){
                         colorSetting = 'yellow';
                     } else {
                         colorSetting = 'blue';
