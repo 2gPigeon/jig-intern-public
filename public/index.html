@@ -232,6 +232,11 @@
             }
             const formData = new FormData();
             formData.append('file', fileInput.files[0]);
+            // 送信中はUIを無効化
+            const controls = Array.from(document.querySelectorAll('button, input, select'));
+            controls.forEach(el => { try { el.disabled = true; } catch (_) {} });
+            status.textContent = 'アップロード中...';
+            status.style.color = '#333';
             try {
                 const res = await fetch('/upload-csv', { method: 'POST', body: formData });
                 if (!res.ok) {
@@ -239,7 +244,7 @@
                     throw new Error(t || 'アップロードに失敗しました');
                 }
                 const body = await res.json().catch(() => ({ ok: true }));
-                status.textContent = `アップロード完了（取り込み件数: ${body.imported ?? '?'}）`;
+                status.textContent = `アップロード完了（取り込み件数: ${body.imported ?? '?'}、スキップ: ${body.skipped ?? 0}）`;
                 status.style.color = 'green';
                 // 地図をリフレッシュ
                 markers.forEach(m => map.removeLayer(m));
@@ -251,6 +256,9 @@
             } catch (e) {
                 status.textContent = e.message;
                 status.style.color = 'red';
+            } finally {
+                // UIを復帰
+                controls.forEach(el => { try { el.disabled = false; } catch (_) {} });
             }
         });
 
