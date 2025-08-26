@@ -8,6 +8,21 @@
     <link rel="icon" href="favicon.ico">
     <!-- LeafletのCSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css">
+    <style>
+        .cluster {
+            background: rgba(0, 122, 255, 0.9);
+            color: #fff;
+            border-radius: 20px;
+            display: grid;
+            place-items: center;
+            width: 44px; height: 44px;
+            font-weight: 700;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 6px rgba(0,0,0,.2);
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -39,6 +54,7 @@
     
     <!-- LeafletのJS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
     <script src="leaflet.sprite.js"></script>
     <script>
         const markers = [];
@@ -63,6 +79,20 @@
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
+
+        // クラスタグループ（クラスタ内合計金額を表示）
+        const clusterGroup = L.markerClusterGroup({
+            iconCreateFunction: function (cluster) {
+                const sum = cluster.getAllChildMarkers()
+                    .reduce((acc, m) => acc + (m.options.amount || 0), 0);
+                return L.divIcon({
+                    html: `<div class="cluster">¥${sum.toLocaleString()}</div>`,
+                    className: '',
+                    iconSize: [44, 44]
+                });
+            }
+        });
+        map.addLayer(clusterGroup);
 
         async function ensureLoggedIn() {
             const res = await fetch('/me');
@@ -97,7 +127,8 @@
                         } else {
                             colorSetting = 'blue';
                         }
-                        const marker = L.marker([item.latitude, item.longitude],{icon: L.spriteIcon(colorSetting)}).addTo(map);
+                        const marker = L.marker([item.latitude, item.longitude], { icon: L.spriteIcon(colorSetting), amount: Number(item.data) });
+                        clusterGroup.addLayer(marker);
                         marker.bindPopup(`支出: ${item.data}円`);
                         markers.push(marker);
                     });
@@ -133,6 +164,7 @@
             // ログアウト時はマーカーを消す
             markers.forEach(m => map.removeLayer(m));
             markers.length = 0;
+            clusterGroup.clearLayers();
         });
 
         // 初期ロード
@@ -144,6 +176,7 @@
                 map.removeLayer(marker); // 既存のマーカーを削除
             });
             markers.length = 0; // マーカーの配列をクリア
+            clusterGroup.clearLayers();
             fetch(`/get-search-data?YYYY-MM=${month}`, {
                 method: 'GET',
                 headers: {
@@ -161,7 +194,8 @@
                         } else {
                             colorSetting = 'blue';
                         }
-                        const marker = L.marker([item.latitude, item.longitude],{icon: L.spriteIcon(colorSetting)}).addTo(map);
+                        const marker = L.marker([item.latitude, item.longitude], { icon: L.spriteIcon(colorSetting), amount: Number(item.data) });
+                        clusterGroup.addLayer(marker);
                         marker.bindPopup(`支出: ${item.data}円`);
                         markers.push(marker);
                     });
