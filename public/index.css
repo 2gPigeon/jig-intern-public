@@ -60,18 +60,16 @@ body {
             background-color: #458049;
         }
         button#github-button {
-            display: flex;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            height: 100%;
-            width: 10%;
             margin: 0;
             padding: 0;
             background-color: transparent;
             border: none;
             cursor: pointer;
-            width: 100%;
-            height: 100%;
+            width: auto;
+            height: auto;
         }
         /* Map container styles */
         #map {
