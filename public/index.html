@@ -43,6 +43,15 @@
             <button onclick="location.href='data_input.html'">データ入力</button>
             <input type = "month" id = "monthInput" />
             <button type = "button" id = "searchButton">月ごとの検索</button>
+            <div id="upload-box" style="display: none; margin-top: 12px;">
+                <input type="file" id="csvFile" accept=".csv" style="width: 100%;">
+                <button type="button" id="uploadButton" style="margin-top: 8px;">CSVアップロード</button>
+                <div id="uploadStatus" style="margin-top: 6px; font-size: 12px; color: #333;"></div>
+            </div>
+            <div id="unresolved-box" style="display: none; margin-top: 12px; text-align: left;">
+                <div style="font-weight: bold; margin-bottom: 6px;">未解決（手動位置付与）</div>
+                <div id="unresolved-list" style="max-height: 160px; overflow: auto; border: 1px solid #ccc; padding: 6px; border-radius: 4px; background: #fff;"></div>
+            </div>
         </div>
         <div class="main">
             <div id="map"></div>
@@ -101,11 +110,15 @@
                 document.getElementById('auth-status').textContent = `ログイン中: ${me.userId}`;
                 document.getElementById('login-form').style.display = 'none';
                 document.getElementById('logout-form').style.display = 'block';
+                document.getElementById('upload-box').style.display = 'block';
+                document.getElementById('unresolved-box').style.display = 'block';
                 return true;
             }
             document.getElementById('auth-status').textContent = '未ログイン';
             document.getElementById('login-form').style.display = 'block';
             document.getElementById('logout-form').style.display = 'none';
+            document.getElementById('upload-box').style.display = 'none';
+            document.getElementById('unresolved-box').style.display = 'none';
             return false;
         }
 
@@ -161,6 +174,8 @@
             document.getElementById('auth-status').textContent = '未ログイン';
             document.getElementById('login-form').style.display = 'block';
             document.getElementById('logout-form').style.display = 'none';
+            document.getElementById('upload-box').style.display = 'none';
+            document.getElementById('unresolved-box').style.display = 'none';
             // ログアウト時はマーカーを消す
             markers.forEach(m => map.removeLayer(m));
             markers.length = 0;
@@ -204,6 +219,105 @@
                     console.error('データの取得に失敗しました:', error);
                 });
         });
+
+        // CSVアップロード
+        document.getElementById('uploadButton').addEventListener('click', async function() {
+            const fileInput = document.getElementById('csvFile');
+            const status = document.getElementById('uploadStatus');
+            status.textContent = '';
+            if (!fileInput.files || fileInput.files.length === 0) {
+                status.textContent = 'CSVファイルを選択してください。';
+                status.style.color = 'red';
+                return;
+            }
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            try {
+                const res = await fetch('/upload-csv', { method: 'POST', body: formData });
+                if (!res.ok) {
+                    const t = await res.text();
+                    throw new Error(t || 'アップロードに失敗しました');
+                }
+                const body = await res.json().catch(() => ({ ok: true }));
+                status.textContent = `アップロード完了（取り込み件数: ${body.imported ?? '?'}）`;
+                status.style.color = 'green';
+                // 地図をリフレッシュ
+                markers.forEach(m => map.removeLayer(m));
+                markers.length = 0;
+                clusterGroup.clearLayers();
+                // 最新データを再取得
+                await loadAllData();
+                await loadUnresolved();
+            } catch (e) {
+                status.textContent = e.message;
+                status.style.color = 'red';
+            }
+        });
+
+        // 未解決一覧の読み込みと表示
+        async function loadUnresolved() {
+            const list = document.getElementById('unresolved-list');
+            if (!list) return;
+            list.innerHTML = '読み込み中...';
+            try {
+                const res = await fetch('/unresolved');
+                if (!res.ok) throw new Error('未解決の取得に失敗');
+                const items = await res.json();
+                if (!Array.isArray(items) || items.length === 0) {
+                    list.innerHTML = '<div style="color:#666;">未解決はありません</div>';
+                    return;
+                }
+                list.innerHTML = '';
+                items.forEach(item => {
+                    const row = document.createElement('div');
+                    row.style.display = 'grid';
+                    row.style.gridTemplateColumns = '1fr 1fr 1fr auto';
+                    row.style.gap = '6px';
+                    row.style.alignItems = 'center';
+                    row.style.marginBottom = '6px';
+                    row.innerHTML = `
+                        <div style="font-size:12px;">${item.place} / ￥${Number(item.amount).toLocaleString()}</div>
+                        <input type="number" step="any" placeholder="緯度" value="" style="width:100%;" class="lat-input">
+                        <input type="number" step="any" placeholder="経度" value="" style="width:100%;" class="lon-input">
+                        <button type="button" class="resolve-button">確定</button>
+                    `;
+                    const latInput = row.querySelector('.lat-input');
+                    const lonInput = row.querySelector('.lon-input');
+                    const btn = row.querySelector('.resolve-button');
+                    btn.addEventListener('click', async () => {
+                        const lat = Number(latInput.value);
+                        const lon = Number(lonInput.value);
+                        if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+                            alert('緯度経度を正しく入力してください');
+                            return;
+                        }
+                        try {
+                            const res = await fetch('/resolve-unresolved', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ id: item.id, latitude: lat, longitude: lon })
+                            });
+                            if (!res.ok) throw new Error('確定に失敗');
+                            // 再読み込み
+                            await loadUnresolved();
+                            // 地図も更新
+                            markers.forEach(m => map.removeLayer(m));
+                            markers.length = 0;
+                            clusterGroup.clearLayers();
+                            await loadAllData();
+                        } catch (e) {
+                            alert(e.message);
+                        }
+                    });
+                    list.appendChild(row);
+                });
+            } catch (e) {
+                list.innerHTML = `<div style="color:red;">${e.message}</div>`;
+            }
+        }
+
+        // 起動時にも未解決を読んでおく
+        ensureLoggedIn().then(loadUnresolved);
     </script>
 </body>
 </html>
