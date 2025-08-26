@@ -11,6 +11,16 @@
 </head>
 <body>
     <h1>購入データの入力をしよう</h1>
+    <div id="auth-box" style="margin-bottom: 12px;">
+        <div id="auth-status" style="margin-bottom: 6px;">未ログイン</div>
+        <div id="login-form">
+            <input type="text" id="username" placeholder="ユーザー名" style="width: 160px;">
+            <button type="button" id="login-button">ログイン</button>
+        </div>
+        <div id="logout-form" style="display: none;">
+            <button type="button" id="logout-button">ログアウト</button>
+        </div>
+    </div>
     <form method="post">
         <label for="data">購入金額を入力してください:</label>
         <input type="number" id="data" name="data" max="1000000" min="1" required>円<br>
@@ -183,7 +193,46 @@
             toggleSubmit();
         });
         // 送信ボタンクリック時の処理
-        document.getElementById('submit-button').addEventListener('click', function() {
+        async function ensureLoggedIn() {
+            const res = await fetch('/me');
+            if (res.ok) {
+                const me = await res.json();
+                document.getElementById('auth-status').textContent = `ログイン中: ${me.userId}`;
+                document.getElementById('login-form').style.display = 'none';
+                document.getElementById('logout-form').style.display = 'block';
+                document.getElementById('submit-button').disabled = false;
+                return true;
+            }
+            document.getElementById('auth-status').textContent = '未ログイン';
+            document.getElementById('login-form').style.display = 'block';
+            document.getElementById('logout-form').style.display = 'none';
+            document.getElementById('submit-button').disabled = true;
+            return false;
+        }
+
+        document.getElementById('login-button').addEventListener('click', async function() {
+            const username = document.getElementById('username').value.trim();
+            if (!username) { alert('ユーザー名を入力してください'); return; }
+            const res = await fetch('/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username })
+            });
+            if (res.ok) {
+                await ensureLoggedIn();
+            } else {
+                alert('ログインに失敗しました');
+            }
+        });
+
+        document.getElementById('logout-button').addEventListener('click', async function() {
+            await fetch('/logout', { method: 'POST' });
+            await ensureLoggedIn();
+        });
+
+        document.getElementById('submit-button').addEventListener('click', async function() {
+            const loggedIn = await ensureLoggedIn();
+            if (!loggedIn) { alert('送信にはログインが必要です'); return; }
             const data = document.getElementById('data').value;
             const latitude = document.getElementById('latitude').value;
             const longitude = document.getElementById('longitude').value;
@@ -196,11 +245,16 @@
             }).then(response => {
                 if (response.ok) {
                     window.location.href = '/';
+                } else if (response.status === 401) {
+                    alert('ログインが必要です');
                 } else {
                     alert('データの送信に失敗しました。');
                 }
             });
         });
+
+        // 初期状態で認証チェック
+        ensureLoggedIn();
     </script>
     <div id="leaflet-map" style="height: 400px; width: 100%; display: none;"></div>
 </body>

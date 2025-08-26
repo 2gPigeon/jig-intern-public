@@ -15,6 +15,16 @@
     </header>
     <div class="container">
         <div class="sidebar">
+            <div id="auth-box" style="margin-bottom: 12px;">
+                <div id="auth-status" style="margin-bottom: 6px;">未ログイン</div>
+                <div id="login-form">
+                    <input type="text" id="username" placeholder="ユーザー名" style="width: 120px;">
+                    <button type="button" id="login-button">ログイン</button>
+                </div>
+                <div id="logout-form" style="display: none;">
+                    <button type="button" id="logout-button">ログアウト</button>
+                </div>
+            </div>
             <button onclick="location.href='data_input.html'">データ入力</button>
             <input type = "month" id = "monthInput" />
             <button type = "button" id = "searchButton">月ごとの検索</button>
@@ -54,31 +64,79 @@
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
 
-        // データを取得
-        fetch('/get-data',{
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
+        async function ensureLoggedIn() {
+            const res = await fetch('/me');
+            if (res.ok) {
+                const me = await res.json();
+                document.getElementById('auth-status').textContent = `ログイン中: ${me.userId}`;
+                document.getElementById('login-form').style.display = 'none';
+                document.getElementById('logout-form').style.display = 'block';
+                return true;
             }
-        }).then(response => response.json())
-            .then(data => {
-                data.forEach(item => {
-                    // 各データポイントにマーカーを追加
-                    if(item.data >= 10000){
-                        colorSetting = 'red';
-                    } else if(item.data >= 1000){
-                        colorSetting = 'yellow';
-                    } else {
-                        colorSetting = 'blue';
-                    }
-                    const marker = L.marker([item.latitude, item.longitude],{icon: L.spriteIcon(colorSetting)}).addTo(map);
-                    marker.bindPopup(`支出: ${item.data}円`);
-                    markers.push(marker);
+            document.getElementById('auth-status').textContent = '未ログイン';
+            document.getElementById('login-form').style.display = 'block';
+            document.getElementById('logout-form').style.display = 'none';
+            return false;
+        }
+
+        async function loadAllData() {
+            const isLogin = await ensureLoggedIn();
+            if (!isLogin) return; // ログインしていなければ読み込まない
+            fetch('/get-data',{
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => response.json())
+                .then(data => {
+                    data.forEach(item => {
+                        if(item.data >= 10000){
+                            colorSetting = 'red';
+                        } else if(item.data >= 1000){
+                            colorSetting = 'yellow';
+                        } else {
+                            colorSetting = 'blue';
+                        }
+                        const marker = L.marker([item.latitude, item.longitude],{icon: L.spriteIcon(colorSetting)}).addTo(map);
+                        marker.bindPopup(`支出: ${item.data}円`);
+                        markers.push(marker);
+                    });
+                })
+                .catch(error => {
+                    console.error('データの取得に失敗しました:', error);
                 });
-            })
-            .catch(error => {
-                console.error('データの取得に失敗しました:', error);
+        }
+
+        // ログイン/ログアウト操作
+        document.getElementById('login-button').addEventListener('click', async function() {
+            const username = document.getElementById('username').value.trim();
+            if (!username) { alert('ユーザー名を入力してください'); return; }
+            const res = await fetch('/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username })
             });
+            if (res.ok) {
+                await ensureLoggedIn();
+                // ログイン後にデータを読み込む
+                loadAllData();
+            } else {
+                alert('ログインに失敗しました');
+            }
+        });
+
+        document.getElementById('logout-button').addEventListener('click', async function() {
+            await fetch('/logout', { method: 'POST' });
+            document.getElementById('auth-status').textContent = '未ログイン';
+            document.getElementById('login-form').style.display = 'block';
+            document.getElementById('logout-form').style.display = 'none';
+            // ログアウト時はマーカーを消す
+            markers.forEach(m => map.removeLayer(m));
+            markers.length = 0;
+        });
+
+        // 初期ロード
+        ensureLoggedIn().then(loadAllData);
         // 月ごとの検索ボタンのイベントリスナー
         document.getElementById('searchButton').addEventListener('click', function() {
             const month = document.getElementById('monthInput').value;
