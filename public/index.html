@@ -239,20 +239,43 @@
             status.style.color = '#333';
             try {
                 const res = await fetch('/upload-csv', { method: 'POST', body: formData });
-                if (!res.ok) {
+                if (!res.ok && res.status !== 202) {
                     const t = await res.text();
                     throw new Error(t || 'アップロードに失敗しました');
                 }
-                const body = await res.json().catch(() => ({ ok: true }));
-                status.textContent = `アップロード完了（取り込み件数: ${body.imported ?? '?'}、スキップ: ${body.skipped ?? 0}）`;
-                status.style.color = 'green';
-                // 地図をリフレッシュ
-                markers.forEach(m => map.removeLayer(m));
-                markers.length = 0;
-                clusterGroup.clearLayers();
-                // 最新データを再取得
-                await loadAllData();
-                await loadUnresolved();
+                const body = await res.json().catch(() => ({}));
+                const jobId = body.jobId;
+                status.textContent = '取り込みジョブ開始...';
+                status.style.color = '#333';
+
+                // ポーリング開始
+                const poll = async () => {
+                    const stRes = await fetch(`/upload-status?jobId=${encodeURIComponent(jobId)}`);
+                    if (!stRes.ok) throw new Error('進捗取得に失敗');
+                    const st = await stRes.json();
+                    if (st.status === 'processing') {
+                        status.textContent = `処理中... 取り込み: ${st.imported} / スキップ: ${st.skipped} / 未解決: ${st.unresolved}`;
+                        setTimeout(poll, 1500);
+                        return;
+                    }
+                    if (st.status === 'done') {
+                        status.textContent = `完了: 取り込み ${st.imported} / スキップ ${st.skipped} / 未解決 ${st.unresolved}`;
+                        status.style.color = 'green';
+                        // 地図をリフレッシュ
+                        markers.forEach(m => map.removeLayer(m));
+                        markers.length = 0;
+                        clusterGroup.clearLayers();
+                        await loadAllData();
+                        await loadUnresolved();
+                        return;
+                    }
+                    if (st.status === 'error') {
+                        status.textContent = `エラー: ${st.reason || '不明'}`;
+                        status.style.color = 'red';
+                        return;
+                    }
+                };
+                await poll();
             } catch (e) {
                 status.textContent = e.message;
                 status.style.color = 'red';
