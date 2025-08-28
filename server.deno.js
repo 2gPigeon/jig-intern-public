@@ -61,10 +61,40 @@ function parsePaypayDate(value) {
 async function geocodePlaceName(placeName) {
   const q = String(placeName || "").trim();
   if (!q) return null;
+
   const kv = await Deno.openKv();
   const cacheKey = ["geocode", "jp", q];
   const cached = await kv.get(cacheKey);
   if (cached.value) return cached.value;
+
+  // Yahoo! Geocoder API integration with environment variable
+  const yahooAppId = Deno.env.get("YAHOO_APP_ID");
+  if (!yahooAppId) {
+    console.error("Yahoo App ID is not set in environment variables");
+    return null;
+  }
+
+  const yahooUrl = `https://map.yahooapis.jp/geocode/V1/geoCoder?appid=${yahooAppId}&query=${encodeURIComponent(q)}&output=json`;
+  try {
+    const yahooRes = await fetch(yahooUrl);
+    if (yahooRes.ok) {
+      const yahooData = await yahooRes.json();
+      if (yahooData.Feature && yahooData.Feature.length > 0) {
+        const location = yahooData.Feature[0].Geometry.Coordinates.split(",");
+        const result = {
+          lat: parseFloat(location[1]),
+          lon: parseFloat(location[0]),
+          display_name: yahooData.Feature[0].Name,
+        };
+        await kv.set(cacheKey, result);
+        return result;
+      }
+    }
+  } catch (err) {
+    console.error("Yahoo Geocoder API error:", err);
+  }
+
+  // Fallback to OpenStreetMap Nominatim API
   const url = new URL("https://nominatim.openstreetmap.org/search");
   url.searchParams.set("format", "jsonv2");
   url.searchParams.set("q", q);
