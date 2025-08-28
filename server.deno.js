@@ -69,6 +69,7 @@ async function geocodePlaceName(placeName) {
 
   // Yahoo! Geocoder API integration with environment variable
   const yahooAppId = Deno.env.get("YAHOO_APP_ID");
+  console.log(yahooAppId);
   if (!yahooAppId) {
     console.error("Yahoo App ID is not set in environment variables");
     return null;
