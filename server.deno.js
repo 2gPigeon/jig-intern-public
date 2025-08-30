@@ -350,20 +350,38 @@ Deno.serve(async (req) => {
     const unresolvedKey = ["unresolved", userId, id];
     const rec = await kv.get(unresolvedKey);
     if (!rec.value) return new Response("not found", { status: 404 });
-    const { amount, dateParts, place } = rec.value;
-    const key = ["user", userId, `${dateParts.Y}-${dateParts.M}`, dateParts.D, `${dateParts.h}:${dateParts.m}:${dateParts.s}`];
-    const exists = await kv.get(key);
-    if (!exists.value) {
-      await kv.set(key, { data: amount, latitude, longitude });
+    const { place } = rec.value;
+    
+    // 同じ店名の他の未解決アイテムも検索
+    const allUnresolved = [];
+    for await (const entry of kv.list({ prefix: ["unresolved", userId] })) {
+      if (entry.value.place === place) {
+        allUnresolved.push(entry);
+      }
     }
+    
+    let resolvedCount = 0;
+    // 同じ店名のすべての未解決アイテムを解決
+    for (const unresolvedEntry of allUnresolved) {
+      const { amount: itemAmount, dateParts: itemDateParts } = unresolvedEntry.value;
+      const itemKey = ["user", userId, `${itemDateParts.Y}-${itemDateParts.M}`, itemDateParts.D, `${itemDateParts.h}:${itemDateParts.m}:${itemDateParts.s}`];
+      const exists = await kv.get(itemKey);
+      if (!exists.value) {
+        await kv.set(itemKey, { data: itemAmount, latitude, longitude });
+        resolvedCount++;
+      }
+      // 未解決リストから削除
+      await kv.delete(unresolvedEntry.key);
+    }
+    
     // 手動解決の結果をグローバルキャッシュにも保存（次回以降は即解決）
     const q = String(place || "").trim();
     if (q) {
       const cacheKey = ["geocode", "jp", q];
       await kv.set(cacheKey, { lat: latitude, lon: longitude, display_name: `manual:${q}` });
     }
-    await kv.delete(unresolvedKey);
-    return new Response(JSON.stringify({ ok: true }), { headers: { "Content-Type": "application/json" } });
+    
+    return new Response(JSON.stringify({ ok: true, resolvedCount, place }), { headers: { "Content-Type": "application/json" } });
   }
   return serveDir(req, {
     fsRoot: "public",
