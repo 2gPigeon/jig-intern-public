@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>未解決アイテム管理 - お金を落としたのはどこ？</title>
+    <link rel="stylesheet" href="unresolved.css">
+    <link rel="icon" href="favicon.ico">
+    <!-- LeafletのCSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+    <header>
+        未解決アイテム管理
+    </header>
+    <div class="container">
+        <div class="sidebar">
+            <div id="auth-box" style="margin-bottom: 12px;">
+                <div id="auth-status" style="margin-bottom: 6px;">未ログイン</div>
+                <div id="login-form">
+                    <input type="text" id="username" placeholder="ユーザー名" style="width: 120px;">
+                    <button type="button" id="login-button">ログイン</button>
+                </div>
+                <div id="logout-form" style="display: none;">
+                    <button type="button" id="logout-button">ログアウト</button>
+                </div>
+            </div>
+            <button onclick="location.href='index.html'" style = "margin-top: 0px;">メインページに戻る</button>
+            <button onclick="location.href='data_input.html'">データ入力</button>
+            <div id="summary-box" style="margin-top: 12px; padding: 10px; background-color: #e8f5e8; border-radius: 4px;">
+                <div style="font-weight: bold; margin-bottom: 6px;">概要</div>
+                <div id="summary-text">読み込み中...</div>
+            </div>
+        </div>
+        <div class="main">
+            <div class="content">
+                <div class="map-section">
+                    <h3>位置確認マップ</h3>
+                    <div id="map" style="height: 300px; margin-bottom: 20px;"></div>
+                </div>
+                <div class="unresolved-section">
+                    <h3>未解決アイテム一覧</h3>
+                    <div id="unresolved-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <footer>
+        <button type="button" id="github-button" onclick="location.href='https://github.com/2gPigeon/jig-intern-public'">
+            <img src="github-mark-white.png" height="20" width="20">
+        </button>
+    </footer>
+    
+    <!-- LeafletのJS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        let map;
+        let currentMarker = null;
+        
+        // 地図の初期化
+        function initMap() {
+            map = L.map('map').setView([35.6762, 139.6503], 10); // 東京を中心
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+            
+            // 地図クリックで位置を設定
+            map.on('click', function(e) {
+                const lat = e.latlng.lat;
+                const lng = e.latlng.lng;
+                
+                // 既存のマーカーを削除
+                if (currentMarker) {
+                    map.removeLayer(currentMarker);
+                }
+                
+                // 新しいマーカーを追加
+                currentMarker = L.marker([lat, lng]).addTo(map);
+                
+                // アクティブなフォームに座標を設定
+                const activeRow = document.querySelector('.unresolved-item.active');
+                if (activeRow) {
+                    const latInput = activeRow.querySelector('.lat-input');
+                    const lonInput = activeRow.querySelector('.lon-input');
+                    latInput.value = lat.toFixed(6);
+                    lonInput.value = lng.toFixed(6);
+                }
+            });
+        }
+
+        async function ensureLoggedIn() {
+            const res = await fetch('/me');
+            if (res.ok) {
+                const me = await res.json();
+                document.getElementById('auth-status').textContent = `ログイン中: ${me.userId}`;
+                document.getElementById('login-form').style.display = 'none';
+                document.getElementById('logout-form').style.display = 'block';
+                return true;
+            }
+            document.getElementById('auth-status').textContent = '未ログイン';
+            document.getElementById('login-form').style.display = 'block';
+            document.getElementById('logout-form').style.display = 'none';
+            return false;
+        }
+
+        // ログイン/ログアウト操作
+        document.getElementById('login-button').addEventListener('click', async function() {
+            const username = document.getElementById('username').value.trim();
+            if (!username) { alert('ユーザー名を入力してください'); return; }
+            const res = await fetch('/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username })
+            });
+            if (res.ok) {
+                await ensureLoggedIn();
+                await loadUnresolved();
+            } else {
+                alert('ログインに失敗しました');
+            }
+        });
+
+        document.getElementById('logout-button').addEventListener('click', async function() {
+            await fetch('/logout', { method: 'POST' });
+            await ensureLoggedIn();
+            document.getElementById('unresolved-list').innerHTML = '';
+            document.getElementById('summary-text').textContent = 'ログインしてください';
+        });
+
+        // 未解決一覧の読み込みと表示
+        async function loadUnresolved() {
+            const list = document.getElementById('unresolved-list');
+            const summaryText = document.getElementById('summary-text');
+            
+            if (!list) return;
+            
+            list.innerHTML = '読み込み中...';
+            summaryText.textContent = '読み込み中...';
+            
+            try {
+                const res = await fetch('/unresolved');
+                if (!res.ok) throw new Error('未解決の取得に失敗');
+                const items = await res.json();
+                
+                if (!Array.isArray(items) || items.length === 0) {
+                    list.innerHTML = '<div class="no-items">未解決のアイテムはありません</div>';
+                    summaryText.textContent = '未解決のアイテムはありません';
+                    return;
+                }
+                
+                // 概要を更新
+                const totalAmount = items.reduce((sum, item) => sum + (item.amount || 0), 0);
+                const uniquePlaces = new Set(items.map(item => item.place)).size;
+                summaryText.innerHTML = `
+                    <div>総件数: ${items.length}件</div>
+                    <div>総金額: ¥${totalAmount.toLocaleString()}</div>
+                    <div>異なる店舗: ${uniquePlaces}件</div>
+                `;
+                
+                list.innerHTML = '';
+                
+                // 店舗名でグループ化
+                const groupedItems = {};
+                items.forEach(item => {
+                    if (!groupedItems[item.place]) {
+                        groupedItems[item.place] = [];
+                    }
+                    groupedItems[item.place].push(item);
+                });
+                
+                // グループごとに表示
+                Object.entries(groupedItems).forEach(([place, placeItems]) => {
+                    const groupDiv = document.createElement('div');
+                    groupDiv.className = 'place-group';
+                    
+                    const placeAmount = placeItems.reduce((sum, item) => sum + (item.amount || 0), 0);
+                    
+                    groupDiv.innerHTML = `
+                        <div class="place-header">
+                            <h4>${place}</h4>
+                            <div class="place-info">
+                                ${placeItems.length}件 / ¥${placeAmount.toLocaleString()}
+                            </div>
+                        </div>
+                        <div class="place-items">
+                            ${placeItems.map(item => `
+                                <div class="unresolved-item" data-id="${item.id}">
+                                    <div class="item-info">
+                                        <div class="amount">¥${Number(item.amount).toLocaleString()}</div>
+                                        <div class="date">${new Date(item.dateISO).toLocaleDateString('ja-JP')}</div>
+                                    </div>
+                                    <div class="coordinate-inputs">
+                                        <div class="input-group">
+                                            <label>緯度:</label>
+                                            <input type="number" step="any" class="lat-input" placeholder="35.6762">
+                                        </div>
+                                        <div class="input-group">
+                                            <label>経度:</label>
+                                            <input type="number" step="any" class="lon-input" placeholder="139.6503">
+                                        </div>
+                                    </div>
+                                    <div class="actions">
+                                        <button type="button" class="map-select-btn">地図で選択</button>
+                                        <button type="button" class="resolve-btn">確定</button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="group-actions">
+                            <button type="button" class="resolve-all-btn">この店舗の全てを一括確定</button>
+                        </div>
+                    `;
+                    
+                    list.appendChild(groupDiv);
+                });
+                
+                // イベントリスナーを設定
+                setupEventListeners();
+                
+            } catch (e) {
+                list.innerHTML = `<div class="error">エラー: ${e.message}</div>`;
+                summaryText.textContent = `エラー: ${e.message}`;
+            }
+        }
+        
+        function setupEventListeners() {
+            // 地図で選択ボタン
+            document.querySelectorAll('.map-select-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // 他のアクティブ状態を解除
+                    document.querySelectorAll('.unresolved-item').forEach(item => {
+                        item.classList.remove('active');
+                    });
+                    
+                    // 現在のアイテムをアクティブに
+                    const item = this.closest('.unresolved-item');
+                    item.classList.add('active');
+                    
+                    // 地図をスクロールして表示
+                    document.getElementById('map').scrollIntoView({ behavior: 'smooth' });
+                });
+            });
+            
+            // 個別確定ボタン
+            document.querySelectorAll('.resolve-btn').forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    const item = this.closest('.unresolved-item');
+                    const id = item.dataset.id;
+                    const lat = Number(item.querySelector('.lat-input').value);
+                    const lon = Number(item.querySelector('.lon-input').value);
+                    
+                    if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+                        alert('緯度経度を正しく入力してください');
+                        return;
+                    }
+                    
+                    try {
+                        const res = await fetch('/resolve-unresolved', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ id, latitude: lat, longitude: lon })
+                        });
+                        
+                        if (!res.ok) throw new Error('確定に失敗');
+                        
+                        const result = await res.json();
+                        alert(`${result.resolvedCount}件のアイテムを解決しました: ${result.place}`);
+                        
+                        // 再読み込み
+                        await loadUnresolved();
+                        
+                    } catch (e) {
+                        alert(e.message);
+                    }
+                });
+            });
+            
+            // 一括確定ボタン
+            document.querySelectorAll('.resolve-all-btn').forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    const group = this.closest('.place-group');
+                    const firstItem = group.querySelector('.unresolved-item');
+                    
+                    if (!firstItem) return;
+                    
+                    const lat = Number(firstItem.querySelector('.lat-input').value);
+                    const lon = Number(firstItem.querySelector('.lon-input').value);
+                    
+                    if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+                        alert('最初のアイテムに緯度経度を入力してください');
+                        return;
+                    }
+                    
+                    const id = firstItem.dataset.id;
+                    
+                    try {
+                        const res = await fetch('/resolve-unresolved', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ id, latitude: lat, longitude: lon })
+                        });
+                        
+                        if (!res.ok) throw new Error('一括確定に失敗');
+                        
+                        const result = await res.json();
+                        alert(`${result.resolvedCount}件のアイテムを一括解決しました: ${result.place}`);
+                        
+                        // 再読み込み
+                        await loadUnresolved();
+                        
+                    } catch (e) {
+                        alert(e.message);
+                    }
+                });
+            });
+        }
+
+        // 初期化
+        window.addEventListener('DOMContentLoaded', async function() {
+            initMap();
+            const isLoggedIn = await ensureLoggedIn();
+            if (isLoggedIn) {
+                await loadUnresolved();
+            } else {
+                document.getElementById('summary-text').textContent = 'ログインしてください';
+            }
+        });
+    </script>
+</body>
+</html>
