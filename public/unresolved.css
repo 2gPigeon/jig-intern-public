@@ -1,0 +1,368 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    height: 100vh;
+    width: 100%;
+    margin: 0;
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    background-color: #f5f5f5;
+}
+
+header {
+    background-color: #4CAF50;
+    color: white;
+    padding: 1vh;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 3vh;
+    height: 6vh;
+}
+
+.container {
+    display: flex;
+    flex-direction: row;
+    height: 89vh;
+}
+
+.sidebar {
+    width: 25%;
+    background-color: #f4f4f4;
+    padding: 15px;
+    box-sizing: border-box;
+    text-align: center;
+    border-right: 1px solid #ddd;
+}
+
+.main {
+    flex: 1;
+    padding: 20px;
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+
+.content {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* サイドバーのボタンスタイル */
+.sidebar input {
+    width: 90%;
+    padding: 12px;
+    margin: 10px 0;
+    border: 2px solid #ccc;
+    border-radius: 4px;
+}
+
+.sidebar input:hover {
+    border-color: #4CAF50;
+}
+
+.sidebar button {
+    width: 90%;
+    padding: 10px;
+    margin: 12px 0;
+    border: none;
+    border-radius: 4px;
+    background-color: #4CAF50;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.sidebar button:hover {
+    background-color: #458049;
+}
+
+/* 地図セクション */
+.map-section {
+    margin-bottom: 30px;
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.map-section h3 {
+    margin-top: 0;
+    color: #4CAF50;
+    border-bottom: 2px solid #4CAF50;
+    padding-bottom: 10px;
+}
+
+#map {
+    border-radius: 8px;
+    border: 2px solid #ddd;
+}
+
+/* 未解決セクション */
+.unresolved-section {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.unresolved-section h3 {
+    margin-top: 0;
+    color: #4CAF50;
+    border-bottom: 2px solid #4CAF50;
+    padding-bottom: 10px;
+}
+
+/* 店舗グループ */
+.place-group {
+    margin-bottom: 25px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.place-header {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.place-header h4 {
+    margin: 0;
+    color: #333;
+    font-size: 18px;
+}
+
+.place-info {
+    color: #666;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.place-items {
+    padding: 0;
+}
+
+/* 未解決アイテム */
+.unresolved-item {
+    padding: 15px;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.2s;
+}
+
+.unresolved-item:last-child {
+    border-bottom: none;
+}
+
+.unresolved-item.active {
+    background-color: #e8f5e9;
+    border-left: 4px solid #4CAF50;
+}
+
+.unresolved-item:hover {
+    background-color: #f9f9f9;
+}
+
+.item-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.amount {
+    font-size: 18px;
+    font-weight: bold;
+    color: #2e7d32;
+}
+
+.date {
+    color: #666;
+    font-size: 14px;
+}
+
+.coordinate-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.input-group label {
+    font-size: 12px;
+    color: #666;
+    font-weight: bold;
+}
+
+.input-group input {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+
+.actions {
+    display: flex;
+    gap: 10px;
+}
+
+.map-select-btn {
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    flex: 1;
+}
+
+.map-select-btn:hover {
+    background-color: #1976D2;
+}
+
+.resolve-btn {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    flex: 1;
+}
+
+.resolve-btn:hover {
+    background-color: #45a049;
+}
+
+/* グループアクション */
+.group-actions {
+    padding: 15px;
+    background-color: #f8f9fa;
+    text-align: center;
+}
+
+.resolve-all-btn {
+    background-color: #FF9800;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.resolve-all-btn:hover {
+    background-color: #F57C00;
+}
+
+/* 状態表示 */
+.no-items {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+    font-size: 16px;
+}
+
+.error {
+    color: #f44336;
+    background-color: #ffebee;
+    padding: 15px;
+    border-radius: 4px;
+    text-align: center;
+}
+
+/* フッター */
+footer {
+    background-color: #4CAF50;
+    color: white;
+    height: 5vh;
+    padding: 10px;
+    position: relative;
+    width: 100%;
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+button#github-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    width: auto;
+    height: auto;
+}
+
+/* レスポンシブデザイン */
+@media screen and (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        width: 100%;
+        height: auto;
+        padding: 10px;
+    }
+    
+    .main {
+        padding: 10px;
+    }
+    
+    .coordinate-inputs {
+        grid-template-columns: 1fr;
+    }
+    
+    .actions {
+        flex-direction: column;
+    }
+    
+    .place-header {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .sidebar button {
+        width: 100%;
+        margin: 5px 0;
+        padding: 8px;
+        font-size: 12px;
+    }
+    
+    .unresolved-item {
+        padding: 10px;
+    }
+    
+    .item-info {
+        flex-direction: column;
+        gap: 5px;
+        text-align: center;
+    }
+}
