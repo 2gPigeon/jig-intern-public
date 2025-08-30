@@ -1,5 +1,152 @@
+/* Header and auth styling */
+.header-container {
+  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  color: white;
+  padding: 20px;
+  margin-bottom: 30px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.header-container h1 {
+  margin: 0 0 15px 0;
+  font-size: 28px;
+  font-weight: 300;
+  text-align: center;
+}
+
+.auth-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.auth-status {
+  background: rgba(255,255,255,0.2);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  backdrop-filter: blur(10px);
+}
+
+.login-form {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.username-input {
+  padding: 10px 14px;
+  border: none;
+  border-radius: 20px;
+  font-size: 14px;
+  outline: none;
+  width: 160px;
+  background: rgba(255,255,255,0.9);
+  height: 40px;
+  box-sizing: border-box;
+}
+
+.username-input:focus {
+  background: white;
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.5);
+}
+
+.auth-button {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  outline: none;
+  height: 40px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-btn {
+  background: white;
+  color: #4CAF50;
+}
+
+.login-btn:hover {
+  background: #f8f8f8;
+  transform: translateY(-1px);
+}
+
+.logout-btn {
+  background: rgba(255,255,255,0.2);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.3);
+}
+
+.logout-btn:hover {
+  background: rgba(255,255,255,0.3);
+  transform: translateY(-1px);
+}
+
+/* Responsive auth section */
+@media (max-width: 768px) {
+  .auth-section {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .header-container h1 {
+    font-size: 24px;
+  }
+}
+
+/* Main form container */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+  padding: 20px;
+  background-color: #f5f5f5;
+  line-height: 1.6;
+}
+
+form {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+form label {
+  display: block;
+  margin: 15px 0 8px 0;
+  font-weight: 500;
+  color: #333;
+  font-size: 16px;
+}
+
+form input[type="number"], form input[type="text"] {
+  width: 100%;
+  max-width: 300px;
+  padding: 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: border-color 0.3s ease;
+}
+
+form input[type="number"]:focus, form input[type="text"]:focus {
+  outline: none;
+  border-color: #4CAF50;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+}
+
 input {
-  width: 200px;
   box-sizing: border-box;
 }
 
@@ -97,60 +244,53 @@ input {
   border-radius: 3px;
 }
 
-/* Form styling */
-form {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 20px;
-}
+/* Button group styling */
 .button-group {
   display: flex;
-  gap: 10px;
-  margin-top: 20px;
-}
-button[id="submit-button"] {
-  background-color: #4CAF50;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 16px;
-  margin-top: 20px;
+  gap: 15px;
+  justify-content: center;
+  margin-top: 30px;
 }
 
-button[id="submit-button"]:hover {
-  background-color: #458049;
+.button-group button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  min-width: 100px;
 }
-button[id="submit-button"]:disabled {
+
+#submit-button {
+  background-color: #4CAF50;
+  color: white;
+}
+
+#submit-button:hover {
+  background-color: #45a049;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+#submit-button:disabled {
   background-color: #ccc;
   color: #888;
   cursor: not-allowed;
-  border: 1px solid #aaa;
+  transform: none;
+  box-shadow: none;
 }
-button[id="back-button"] {
-  background-color: #f44336;
+
+#back-button {
+  background-color: #6c757d;
   color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 16px;
-  margin-top: 20px;
 }
 
-button[id="back-button"]:hover {
-  background-color: #a50606;
+#back-button:hover {
+  background-color: #5a6268;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
 }
 
-body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 20px;
-  background-color: #f5f5f5;
-}
-
-h1 {
-  text-align: center;
-  color: #4CAF50;
-}
+/* Remove duplicate styles */

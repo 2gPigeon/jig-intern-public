@@ -10,15 +10,17 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body>
-    <h1>購入データの入力をしよう</h1>
-    <div id="auth-box" style="margin-bottom: 12px;">
-        <div id="auth-status" style="margin-bottom: 6px;">未ログイン</div>
-        <div id="login-form">
-            <input type="text" id="username" placeholder="ユーザー名" style="width: 160px;">
-            <button type="button" id="login-button">ログイン</button>
-        </div>
-        <div id="logout-form" style="display: none;">
-            <button type="button" id="logout-button">ログアウト</button>
+    <div class="header-container">
+        <h1>購入データの入力</h1>
+        <div class="auth-section">
+            <div id="auth-status" class="auth-status">未ログイン</div>
+            <div id="login-form" class="login-form">
+                <input type="text" id="username" placeholder="ユーザー名" class="username-input">
+                <button type="button" id="login-button" class="auth-button login-btn">ログイン</button>
+            </div>
+            <div id="logout-form" class="logout-form" style="display: none;">
+                <button type="button" id="logout-button" class="auth-button logout-btn">ログアウト</button>
+            </div>
         </div>
     </div>
     <form method="post">
